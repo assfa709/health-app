@@ -3,10 +3,10 @@
     "version": "1.0.0",
     "description": "Secure Health Analytics",
     "main": "app.js",
-    "script": {
+    "scripts": {
         "start": "node app.js"
     },
-    "dependecies": {
+    "dependencies": {
         "mysql2": "^3.9.7"
     }
 }
