@@ -12,7 +12,7 @@ const dbConfig = {
     database: process.env.DB_NAME    
 };
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // Create server
 const server = http.createServer((req, res) => {
