@@ -2,7 +2,7 @@ const http = require('http');
 const mysql = require('mysql2');
 
 // Simple database config
-// Read configration from environment variables
+// Read configuration from environment variables
 // These are set in server. Not in code files
 const dbConfig = {
     host: process.env.DB_HOST,
@@ -32,8 +32,8 @@ const server = http.createServer((req, res) => {
             `);
     }
 
-    //Database test page
-    else if (req.url === 'db-test') {
+    // Database test page - FIXED: added slash before db-test
+    else if (req.url === '/db-test') {
         // Check if config is missing
         if (!dbConfig.user || !dbConfig.password) {
             res.writeHead(500, {'Content-Type': 'text/html'});
@@ -60,11 +60,13 @@ const server = http.createServer((req, res) => {
                     return;
             }
 
-            connection.query(`SELECT NOW() as current_time, DATABASE() as db_name`, function(err, result) {
+            connection.query(`SELECT NOW() as current_time, DATABASE() as db_name`, function(err, results) {
                 if (err) {
-                    res.end(`<h2 style="color:red">Query Error: ' + err.message + '</h2><a href="/">Back</a>`);
+                    // FIXED: fixed quote issue here
+                    res.end(`<h2 style="color:red">Query Error: ${err.message}</h2><a href="/">Back</a>`);
                 } else {
                     res.writeHead(200, {'Content-Type': 'text/html'});
+                    // FIXED: changed 'result' to 'results' to match variable name
                     res.end(`
                         <h2 style="color:green">✅ Database Connected Successfully!</h2>
                         <p><strong>Server Time:</strong> ${results[0].current_time}</p>
@@ -74,10 +76,8 @@ const server = http.createServer((req, res) => {
                         <a href="/">← Back to Home</a>
                     `);
                 }
-
                 connection.end();
             });
-            
         });
     }
 
@@ -103,7 +103,7 @@ const server = http.createServer((req, res) => {
         res.writeHead(404);
         res.end(`<h1>404 - Not Found</h1><a href="/">Home</a>`);
     }
-})
+});
 
 // Start server
 server.listen(PORT, () => {
@@ -116,5 +116,5 @@ server.listen(PORT, () => {
     console.log(`DB User: ${dbConfig.user ? 'SET ✓' : 'MISSING ✗'}`);
     console.log(`DB Password: ${dbConfig.password ? 'SET ✓' : 'MISSING ✗'}`);
     console.log(`DB Name: ${dbConfig.database ? 'SET ✓' : 'MISSING ✗'}`);
-    console.log('=' .repeat(50));
-})
+    console.log('='.repeat(50));
+});
