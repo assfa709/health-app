@@ -1,0 +1,12 @@
+{
+    "name": "health-app",
+    "version": "1.0.0",
+    "description": "Secure Health Analytics",
+    "main": "app.js",
+    "script": {
+        "start": "node app.js"
+    },
+    "dependecies": {
+        "mysql2": "^3.9.7"
+    }
+}
