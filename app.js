@@ -20,9 +20,9 @@ const server = http.createServer((req, res) => {
             <html>
             <head><title>Health App</title></head>
             <body style="font-family: Arial; text-align: center; padding: 50px;">
-                <h1>🏥 Health Analytics</h1>
-                <p>Server is running securely!</p>
-                <a href="/db-test">Test Database Connection</a>
+                <h1>Health Analytics</h1>
+                <p>Welcome to Health Analytics!</p>
+                <a href="https://abz.com.et">About Me</a>
             </body>
             </html>
         `);
@@ -70,6 +70,61 @@ const server = http.createServer((req, res) => {
                         <a href="/">← Back to Home</a>
                     `);
                 }
+                connection.end();
+            });
+        });
+    }
+
+    // Visits API/ROUTS (view all visits)
+    else if (req.url === '/visits') {
+        const connection = mysql.createConnection(dbConfig);
+        connection.connect(function(err) {
+            if (err) {
+                res.writeHead(500, {'Content-Type': 'text/html'});
+                res.end('<h2 style="color: red">Database Error</h2>');
+                return;
+            }
+
+            // JOINS query to get patient names with visits
+            const sql = `
+                SELECT v.*, p.first_name, p.last_name
+                FROM visits v
+                JOIN patients p ON v.patient_id = p.id
+                ORDER BY v.visit_date DESC
+                LIMIT 20
+            `;
+
+            connection.query(sql, function(err, results) {
+                if (err) {
+                    res.end(`<h2 style="color: red">Error: ${err.message}</h2><a href="/">Back</a>`);
+                } else {
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    let html = `
+                        <h1>Patient Visits</h1>
+                        <a href="/">Home</a> | <a href="/patients">Patients</a> | <a href="/add-visit">Add Visit</a>
+                        <table border="1" cellpadding="8" style="margin-top: 20px; border-collapse: collapse;">
+                        <tr style="background: #333; color: white;">
+                            <th>ID</th><th>Patient</th><th>Date</th><th>Type</th><th>Chief Complaint</th><th>Diagnosis</th>
+                        </tr>
+                        `;
+
+                        for (let i = 0; i < results.length; i++) {
+                            html += `
+                                <tr>
+                                    <td>${results[i].id}</td>
+                                    <td>${results[i].first_name} ${results[i].last_name}</td>
+                                    <td>${results[i].visit_date}</td>
+                                    <td>${results[i].visit_type}</td>
+                                    <td>${results[i].chief_complaint}</td>
+                                    <td>${results[i].diagnosis }</td>
+                                </tr>
+                                `;
+                        }
+
+                        html += `</table><br/><a href="/">Back to Home</a>`;
+                        res.end(html);
+                }
+
                 connection.end();
             });
         });
