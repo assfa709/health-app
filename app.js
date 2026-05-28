@@ -129,6 +129,61 @@ const server = http.createServer((req, res) => {
             });
         });
     }
+
+    // patients API/Rout (view all patients)
+    else if (req.url === '/patients') {
+        const connection = mysql.createConnection(dbConfig);
+        
+        connection.connect(function(err) {
+            if (err) {
+                res.writeHead(500, {'Content-Type': 'text/html'});
+                res.end('<h2 style="color: red">Database Error</h2>');
+                return;
+            }
+
+            connection.query('SELECT * FROM patients ORDER BY created_at DESC', function(err, results) {
+                if (err) {
+                    res.end(`<h2 style="color: red">Error: ${err.message}</h2>`);
+                } else {
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    let html = `
+                        <h1>Patient List</h1>
+                        <a href="/">Home</a> | <a href="/visits">Visits</a> | <a href="add-patient">Add Patient</a>
+                        <table border="1" cellpadding="12" style="margin-top: 20px; border-collapse: collapse">
+                            <tr style="background: #030c5f; color: white;">
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>DOB</th>
+                                <th>Gender</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Created</th>
+                            </tr>
+                    `;
+
+                    for (let i = 0; i < results.length; i++) {
+                        const p = results[i];
+                        html += `
+                            <tr>
+                                <td>${p.id}</td>
+                                <td>${p.first_name} ${p.last_name}</td>
+                                <td>${p.date_of_birth}</td>
+                                <td>${p.gender}</td>
+                                <td>${p.phone}</td>
+                                <td>${p.email}</td>
+                                <td>${p.created_at}</td>
+                            </tr>
+                        `;
+                    }
+
+                    html += '</table> <br> <a href="/">Back</a>'
+                    res.end(html)
+                }
+
+                connection.end();
+            });
+        });
+    }
     
     else {
         res.writeHead(404);
