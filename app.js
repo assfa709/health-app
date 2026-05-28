@@ -184,6 +184,128 @@ const server = http.createServer((req, res) => {
             });
         });
     }
+
+    // Show Add patient form API/Route
+    else if (req.url === '/app-patient' && req.method === 'GET') {
+        res.writeHead(200, {'Content-Type': 'text/html'});
+        res.end(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Add Patient</title>
+                <style>
+                    body {font-family: Arial; padding: 50px;}
+                    .container {max-width: 500px; margin: 0 auto;}
+                    .form-group {margin-bottom: 15px;}
+                    label {display: block; margin-bottom: 5px; font-weight: bold;}
+                    input, select {width: 100%; padding: 8px; box-sizing: border-box;}
+                    button {background: blue; color: white; padding: 10px 20px; border: none; cursor: pointer;}
+                    .error {color: red;}
+                </style>
+            <body>
+                <div class="container">
+                    <h1>Add New Patient</h1>
+                    <form method="POST" action="/add-patient">
+                        <div class="form-group">
+                            <label>First Name * </label>
+                            <input type="text" name="first_name" required>
+                        </div>
+
+                        <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" name="last_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth</label>
+                            <input type="date" name="date_of_birth">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="gender">
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" name="phone">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea name="address" rows="3"></textarea>
+                        </div>
+                        <button type="submit">Save Patient</button>
+                        <a href="/patients" style="margin-left: 10px;">Cancel</a>
+                    </form>
+                </div>
+            </body>
+            </head>
+            </html>
+            `);
+    }
+
+    // Process Add Patient form(POST)
+    else if (req.url === '/add-patient' && req.method === 'POST') {
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        req.on('end', () => {
+            // Parse form data (url-encoded format)
+            const params = new URLSearchParams(body);
+            const first_name = params.get('first_name');
+            const last_name = params.get('last_name');
+            const date_of_birth = params.get('date_of_birth') || null;
+            const gender = params.get('gender');
+            const phone = params.get('phone') || null;
+            const email = params.get('email') || null;
+            const address = params.get('address') || null;
+
+            // Validate required fields
+            if (!first_name || !last_name) {
+                res.writeHead(400, {'Content-Type': 'text/html'});
+                res.end('<h2 style="color:red">First name and last name are required</h2><a href="/add-patient">Try Again</a>');
+                return;
+            }
+
+             const connection = mysql.createConnection(dbConfig);
+        
+            connection.connect(function(err) {
+                if (err) {
+                    res.end('<h2 style="color:red">Database Error</h2><a href="/add-patient">Back</a>');
+                    return;
+                }
+
+                const sql = `
+                    INSERT INTO patients (first_name, last_name, date_of_birth, gender, phone, email, address)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                `;
+
+                connection.query(sql, [first_name, last_name, date_of_birth, gender, phone, email, address], function(err, result) {
+                    if (err) {
+                        res.end(`<h2 style="color:red">Error: ${err.message}</h2><a href="/add-patient">Back</a>`);
+                    } else {
+                        res.writeHead(200, {'Content-Type': 'text/html'});
+                        res.end(`
+                            <h2 style="color:green">✅ Patient Added Successfully!</h2>
+                            <p>${first_name} ${last_name} has been added to the database.</p>
+                            <a href="/patients">View All Patients</a> | 
+                            <a href="/add-patient">Add Another</a> |
+                            <a href="/">Home</a>
+                        `);
+                    }
+                    connection.end();
+                });
+            });
+        });
+    }
     
     else {
         res.writeHead(404);
