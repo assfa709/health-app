@@ -20,8 +20,20 @@ const server = http.createServer((req, res) => {
             <html>
             <head><title>Health App</title></head>
             <body style="font-family: Arial; text-align: center; padding: 50px;">
-                <h1>Health Analytics</h1>
+                <h1>Health Analytics Platform</h1>
                 <p>Welcome to Health Analytics!</p>
+                <h2>Patient Management</h2>
+                <p>
+                <a href="/patients">View Patients</a>|
+                <a href="/add-patient">Add Patient</a>
+                </p>
+
+                <h2>Visit Management</h2>
+                <p>
+                    <a href="/visits">View Visits</a> | 
+                    <a href="/add-visit">Record Visit</a>
+                </p>
+
                 <a href="https://abz.com.et">About Me</a>
             </body>
             </html>
