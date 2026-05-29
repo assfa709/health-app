@@ -186,7 +186,7 @@ const server = http.createServer((req, res) => {
     }
 
     // Show Add patient form API/Route
-    else if (req.url === '/app-patient' && req.method === 'GET') {
+    else if (req.url === '/add-patient' && req.method === 'GET') {
         res.writeHead(200, {'Content-Type': 'text/html'});
         res.end(`
             <!DOCTYPE html>
@@ -306,6 +306,147 @@ const server = http.createServer((req, res) => {
             });
         });
     }
+
+    // Show Add visits form
+    // Show Add Visit Form
+else if (req.url === '/add-visit' && req.method === 'GET') {
+    const connection = mysql.createConnection(dbConfig);
+    
+    connection.connect(function(err) {
+        if (err) {
+            res.end('<h2 style="color:red">Database Error</h2><a href="/">Back</a>');
+            return;
+        }
+        
+        // Get list of patients for dropdown
+        connection.query('SELECT id, first_name, last_name FROM patients ORDER BY last_name', function(err, patients) {
+            if (err) {
+                res.end(`<h2 style="color:red">Error: ${err.message}</h2>`);
+                connection.end();
+                return;
+            }
+            
+            let patientOptions = '';
+            for (let i = 0; i < patients.length; i++) {
+                patientOptions += `<option value="${patients[i].id}">${patients[i].first_name} ${patients[i].last_name}</option>`;
+            }
+            
+            res.writeHead(200, {'Content-Type': 'text/html'});
+            res.end(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Add Visit</title>
+                    <style>
+                        body { font-family: Arial; padding: 50px; }
+                        .container { max-width: 600px; margin: 0 auto; }
+                        .form-group { margin-bottom: 15px; }
+                        label { display: block; margin-bottom: 5px; font-weight: bold; }
+                        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+                        button { background: blue; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>Record Patient Visit</h1>
+                        <form method="POST" action="/add-visit">
+                            <div class="form-group">
+                                <label>Patient *</label>
+                                <select name="patient_id" required>
+                                    <option value="">Select Patient</option>
+                                    ${patientOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Visit Date *</label>
+                                <input type="date" name="visit_date" value="${new Date().toISOString().split('T')[0]}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Visit Type *</label>
+                                <select name="visit_type" required>
+                                    <option value="Checkup">Checkup</option>
+                                    <option value="Emergency">Emergency</option>
+                                    <option value="Follow-up">Follow-up</option>
+                                    <option value="Consultation">Consultation</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Chief Complaint</label>
+                                <textarea name="chief_complaint" rows="3" placeholder="What is the patient's main concern?"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Diagnosis</label>
+                                <textarea name="diagnosis" rows="3" placeholder="Doctor's diagnosis"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Prescription</label>
+                                <textarea name="prescription" rows="3" placeholder="Medications prescribed"></textarea>
+                            </div>
+                            <button type="submit">Save Visit</button>
+                            <a href="/visits" style="margin-left: 10px;">Cancel</a>
+                        </form>
+                    </div>
+                </body>
+                </html>
+            `);
+            connection.end();
+        });
+    });
+}
+
+// Process Add Visit Form (POST)
+else if (req.url === '/add-visit' && req.method === 'POST') {
+    let body = '';
+    
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
+    
+    req.on('end', () => {
+        const params = new URLSearchParams(body);
+        const patient_id = params.get('patient_id');
+        const visit_date = params.get('visit_date');
+        const visit_type = params.get('visit_type');
+        const chief_complaint = params.get('chief_complaint') || null;
+        const diagnosis = params.get('diagnosis') || null;
+        const prescription = params.get('prescription') || null;
+        
+        if (!patient_id || !visit_date || !visit_type) {
+            res.end('<h2 style="color:red">Patient, date, and type are required</h2><a href="/add-visit">Back</a>');
+            return;
+        }
+        
+        const connection = mysql.createConnection(dbConfig);
+        
+        connection.connect(function(err) {
+            if (err) {
+                res.end('<h2 style="color:red">Database Error</h2><a href="/add-visit">Back</a>');
+                return;
+            }
+            
+            const sql = `
+                INSERT INTO visits (patient_id, visit_date, visit_type, chief_complaint, diagnosis, prescription)
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
+            
+            connection.query(sql, [patient_id, visit_date, visit_type, chief_complaint, diagnosis, prescription], function(err, result) {
+                if (err) {
+                    res.end(`<h2 style="color:red">Error: ${err.message}</h2><a href="/add-visit">Back</a>`);
+                } else {
+                    res.writeHead(200, {'Content-Type': 'text/html'});
+                    res.end(`
+                        <h2 style="color:green">✅ Visit Recorded Successfully!</h2>
+                        <p>Visit has been added to the database.</p>
+                        <a href="/visits">View All Visits</a> | 
+                        <a href="/add-visit">Add Another</a> |
+                        <a href="/">Home</a>
+                    `);
+                }
+                connection.end();
+            });
+        });
+    });
+}
     
     else {
         res.writeHead(404);
