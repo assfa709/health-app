@@ -178,7 +178,7 @@ const server = http.createServer((req, res) => {
                         html += `
                             <tr>
                                 <td>${p.id}</td>
-                                <td>${p.first_name} ${p.last_name}</td>
+                                <td><td><a href="/patient/${p.id}" style="text-decoration: none; color: blue;">${p.first_name} ${p.last_name}</a></td></td>
                                 <td>${p.date_of_birth}</td>
                                 <td>${p.gender}</td>
                                 <td>${p.phone}</td>
@@ -607,9 +607,9 @@ const server = http.createServer((req, res) => {
                                     ${visitsHtml}
                                     
                                     <div style="margin-top: 30px;">
-                                        <a href="/add-visit" class="button">➕ Record New Visit</a>
-                                        <a href="/patients" class="button">📋 Back to Patients</a>
-                                        <a href="/" class="button">🏠 Home</a>
+                                        <a href="/add-visit" class="button">Record New Visit</a>
+                                        <a href="/patients" class="button"> Back to Patients</a>
+                                        <a href="/" class="button"> Home</a>
                                     </div>
                                 </div>
                             </body>
